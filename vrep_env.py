@@ -39,7 +39,7 @@ class Environment:
 				sensor_val=np.append(sensor_val,np.linalg.norm(detectedPoint)) #get list of values
 			else:
 				sensor_val=np.append(sensor_val,np.inf)
-		# print("SENSOR VALUES = ",sensor_val)
+			# print("SENSOR data " ,errorCode,detectionState,detectedPoint,detectedObjectHandle,detectedSurfaceNormalVector)
 				
 		return sensor_val
 
@@ -50,7 +50,7 @@ class Environment:
 		discretized_ranges = np.empty((0,3))
 		min_range = 0.11
 		done = False
-	   
+	   	
 		#  convert sensor values to descrete values for state encoding
 		for i, item in enumerate(sensorDistance):
 			# if item < 0.25:
@@ -75,13 +75,24 @@ class Environment:
 		# _,robot = vrep.simxGetObjectHandle(self.clientID,'Pioneer_p3dx',vrep.simx_opmode_oneshot_wait)
 		# ret_val = vrep.simxSetObjectOrientation(self.clientID,robot ,robot, [0,0,random.choice([-0.05,0,0.05])],vrep.simx_opmode_oneshot)
 		
-		errorCode,self.left_motor_handle=vrep.simxGetObjectHandle(self.clientID,'Pioneer_p3dx_leftMotor',vrep.simx_opmode_oneshot_wait)
-		errorCode,self.right_motor_handle=vrep.simxGetObjectHandle(self.clientID,'Pioneer_p3dx_rightMotor',vrep.simx_opmode_oneshot_wait)
+		errorCode,self.left_motor_handle = vrep.simxGetObjectHandle(self.clientID,'Pioneer_p3dx_leftMotor',vrep.simx_opmode_oneshot_wait)
+		errorCode,self.right_motor_handle = vrep.simxGetObjectHandle(self.clientID,'Pioneer_p3dx_rightMotor',vrep.simx_opmode_oneshot_wait)
+		# print(errorCode, " ++++++++++++++++++++++", self.left_motor_handle)
 
-		for x in range(1,3+1):
+		for x in range(1,self.sensors + 1):
 			errorCode,sensor_handle=vrep.simxGetObjectHandle(self.clientID,'Pioneer_p3dx_ultrasonicSensor'+str(x),vrep.simx_opmode_oneshot_wait)
 			self.sensor_h[x-1] = sensor_handle  
 			
+
+		sensor_val=np.array([])  
+		for x in range(1,self.sensors + 1):
+			errorCode,detectionState,detectedPoint,detectedObjectHandle,detectedSurfaceNormalVector=vrep.simxReadProximitySensor(self.clientID,self.sensor_h[x-1],vrep.simx_opmode_streaming)                
+			if detectionState == True :
+				sensor_val=np.append(sensor_val,np.linalg.norm(detectedPoint)) #get list of values
+			else:
+				sensor_val=np.append(sensor_val,np.inf)
+
+
 	def reset(self):
 		
 		sensorDistance = self.init_sensors()
@@ -112,7 +123,8 @@ class Environment:
 		error_code = vrep.simxStopSimulation(self.clientID,vrep.simx_opmode_blocking)
 	
 	def load_scene(self):
-		error_code = vrep.simxLoadScene(self.clientID,'MyScenes/square_demo'+str(random.choice([1,2]))+'.ttt',0xFF,vrep.simx_opmode_blocking)
+		# error_code = vrep.simxLoadScene(self.clientID,'MyScenes/square_demo'+str(random.choice([1,2]))+'.ttt',0xFF,vrep.simx_opmode_blocking)
+		error_code = vrep.simxLoadScene(self.clientID,'MyScenes/primitive_test.ttt',0xFF,vrep.simx_opmode_blocking)
 
 	def start(self):
 		error_code = vrep.simxStartSimulation(self.clientID,vrep.simx_opmode_oneshot_wait)

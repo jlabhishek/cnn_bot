@@ -24,7 +24,7 @@ class DQNAgent:
 		self.discount_factor = 0.99
 		self.learning_rate = 0.001
 		self.epsilon = 1.0
-		self.epsilon_decay = 0.9992
+		self.epsilon_decay = 0.9993
 		self.epsilon_min = 0.01
 		self.batch_size = 32
 		self.train_start = 1000
@@ -35,6 +35,7 @@ class DQNAgent:
 		self.model = self.build_model(self.hiddenLayers,self.activationType)
 		self.target_model = self.build_model(self.hiddenLayers,self.activationType)
 		print(self.model,"5555555555555555")
+		print(self.model.summary())
 		# initialize target model
 		# self.update_target_model()
 
@@ -69,25 +70,30 @@ class DQNAgent:
 		model.summary()
 
 		model.compile(loss="mse", optimizer=optimizer)
-
+		return model
 
 	# after some time interval update the target model to be same with model
 	def update_target_model(self):
 		self.target_model.set_weights(self.model.get_weights())
+		if self.epsilon > self.epsilon_min:
+			self.epsilon *= self.epsilon_decay
 
 	# get action from model using epsilon-greedy policy
 	def get_action(self, state):
 		if np.random.rand() <= self.epsilon:
-			return random.randrange(self.action_size)
+			action = random.randrange(self.action_size)
+			print("Random Action ", action)
+			return action
 		else:
 			q_value = self.model.predict(state)
+			print("Action = ",np.argmax(q_value[0]))
+
 			return np.argmax(q_value[0])
 
 	# save sample <s,a,r,s'> to the replay memory
 	def append_sample(self, state, action, reward, next_state, done):
 		self.memory.append((state, action, reward, next_state, done))
-		if self.epsilon > self.epsilon_min:
-			self.epsilon *= self.epsilon_decay
+		
 
 	# pick samples randomly from replay memory (with batch_size)
 	def train_model(self):
@@ -123,29 +129,40 @@ class DQNAgent:
 					   epochs=1, verbose=1)
 
 
-	def saveQValues(self,episode_num,file_path):
+	def saveQValues(self,episode_num,file_path,state_size):
 		f = open(file_path,'a')
 		print( '\nQ VALUES for ',episode_num,file = f)
 		state = np.array([0,0,0])
-		for i in range (13,100,30):
-			for j in range(13,100,30):
-				for k in range(13,100,30):
+		for i in range (5,25,5):
+			for j in range(5,25,5):
+				for k in range(5,25,5):
 					state = np.array([i/100,j/100,k/100])
-		
-					predicted = self.model.predict(state.reshape(1,len(state)))
+					state = np.reshape(state, [1, state_size])
+
+					predicted = self.model.predict(state)
 					print(state,' -> ', predicted[0],file = f)
 
 		f.close()
 
-	def saveQActions(self,episode_num,file_path):
+	def saveQActions(self,episode_num,file_path,state_size):
 		f = open(file_path,'a')
 		print( '\nQ VALUES for ',episode_num,file = f)
 		state = np.array([0,0,0])
-		for i in range (13,100,30):
-			for j in range(13,100,30):
-				for k in range(13,100,30):
+		for i in range (5,25,5):
+			for j in range(5,25,5):
+				for k in range(5,25,5):
 					state = np.array([i/100,j/100,k/100])
+					state = np.reshape(state, [1, state_size])
+
 					q_value = self.model.predict(state)
 					print(state,' -> ', np.argmax(q_value[0]),file = f)
 
 		f.close()
+
+
+	def saveWeights(self,episode_num):
+		f = open('Files/Wval.txt','a')
+		print( '\nWeight VALUES for ',episode_num,file = f)
+		for layer in self.model.layers:
+			weights = layer.get_weights()
+			print(weights,file = f)

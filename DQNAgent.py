@@ -1,7 +1,3 @@
-import random
-import numpy as np
-from collections import deque
-
 
 class DQNAgent:
     def __init__(self, state_size, action_size,hiddenLayers,act):
@@ -63,7 +59,7 @@ l
         model.summary()
 
         model.compile(loss="mse", optimizer=optimizer)
-
+        
 
     # after some time interval update the target model to be same with model
     def update_target_model(self):

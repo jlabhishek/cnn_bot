@@ -1,4 +1,5 @@
 import vrep_env
+import time
 
 class Env:
 
@@ -38,7 +39,10 @@ class Env:
 		self.env.stop()
 		self.env.load_scene()
 		self.env.init_sensors()
+
 		self.env.start()
+		self.env.set_vel(0,0)
+		time.sleep(1.5)
 		# env.pause()
 		#env.remove_bot()
 		return self.env.get_observation()
